@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wine Quality Predictor</title>
+    <meta name="description" content="Predict wine quality using advanced machine learning models based on chemical properties.">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Three.js for 3D Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #080305;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 1;
+        }
+
+        .glass-card {
+            background: rgba(30, 10, 15, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 75, 107, 0.2);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 900px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: fadeIn 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        @keyframes fadeIn {
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #ff7b93 0%, #ff2a55 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+        
+        p.subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        label {
+            font-size: 0.8rem;
+            margin-bottom: 0.6rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input:hover {
+            border-color: rgba(255, 75, 107, 0.4);
+            background: rgba(255, 75, 107, 0.05);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #ff2a55;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 20px rgba(255, 42, 85, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .button-group {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .submit-btn {
+            flex: 2;
+            background: linear-gradient(135deg, #ff2a55 0%, #d81b3f 100%);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .retrain-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .retrain-btn:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.1);
+        }
+
+        .retrain-btn:active {
+            transform: translateY(1px);
+        }
+
+        .submit-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-20deg);
+            transition: 0.5s;
+        }
+
+        .submit-btn:hover::after {
+            left: 150%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(216, 27, 63, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 5px 15px rgba(216, 27, 63, 0.4);
+        }
+
+        /* Customize scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #080305;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 42, 85, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 42, 85, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div class="container">
+        <div class="glass-card">
+            <h1>Wine Quality AI</h1>
+            <p class="subtitle">Enter the chemical properties to predict the quality score</p>
+            
+            <form action="/predict" method="POST">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="fixed_acidity">Fixed Acidity</label>
+                        <input type="number" id="fixed_acidity" name="fixed_acidity" step="any" placeholder="e.g. 7.4" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="volatile_acidity">Volatile Acidity</label>
+                        <input type="number" id="volatile_acidity" name="volatile_acidity" step="any" placeholder="e.g. 0.70" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="citric_acid">Citric Acid</label>
+                        <input type="number" id="citric_acid" name="citric_acid" step="any" placeholder="e.g. 0.00" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="residual_sugar">Residual Sugar</label>
+                        <input type="number" id="residual_sugar" name="residual_sugar" step="any" placeholder="e.g. 1.9" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="chlorides">Chlorides</label>
+                        <input type="number" id="chlorides" name="chlorides" step="any" placeholder="e.g. 0.076" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="free_sulfur_dioxide">Free Sulfur Dioxide</label>
+                        <input type="number" id="free_sulfur_dioxide" name="free_sulfur_dioxide" step="any" placeholder="e.g. 11.0" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="total_sulfur_dioxide">Total Sulfur Dioxide</label>
+                        <input type="number" id="total_sulfur_dioxide" name="total_sulfur_dioxide" step="any" placeholder="e.g. 34.0" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="density">Density</label>
+                        <input type="number" id="density" name="density" step="any" placeholder="e.g. 0.9978" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="pH">pH</label>
+                        <input type="number" id="pH" name="pH" step="any" placeholder="e.g. 3.51" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="sulphates">Sulphates</label>
+                        <input type="number" id="sulphates" name="sulphates" step="any" placeholder="e.g. 0.56" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="alcohol">Alcohol</label>
+                        <input type="number" id="alcohol" name="alcohol" step="any" placeholder="e.g. 9.4" required>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="submit-btn">Analyze Quality</button>
+                        <a href="/train" class="retrain-btn">Retrain Model</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3D Animation Script -->
+    <script>
+        const container = document.getElementById('canvas-container');
+        
+        // Scene setup
+        const scene = new THREE.Scene();
+        
+        // Add subtle fog to blend into background
+        scene.fog = new THREE.FogExp2(0x080305, 0.15);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // Create abstract wine fluid/particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 1500;
+        
+        const posArray = new Float32Array(particlesCount * 3);
+        const scaleArray = new Float32Array(particlesCount);
+        
+        for(let i = 0; i < particlesCount * 3; i+=3) {
+            // Distribute particles in a wider space
+            posArray[i] = (Math.random() - 0.5) * 15;     // x
+            posArray[i+1] = (Math.random() - 0.5) * 15;   // y
+            posArray[i+2] = (Math.random() - 0.5) * 10;   // z
+            
+            scaleArray[i/3] = Math.random();
+        }
+        
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('aScale', new THREE.BufferAttribute(scaleArray, 1));
+        
+        // Custom shader material for glowing dots
+        const material = new THREE.PointsMaterial({
+            size: 0.05,
+            color: 0xff2a55,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        
+        const particlesMesh = new THREE.Points(particlesGeometry, material);
+        scene.add(particlesMesh);
+
+        // Add a secondary ambient mesh (rotating wireframe sphere)
+        const geometry = new THREE.IcosahedronGeometry(3, 1);
+        const wireframeMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xff7b93, 
+            wireframe: true,
+            transparent: true,
+            opacity: 0.05
+        });
+        const sphere = new THREE.Mesh(geometry, wireframeMaterial);
+        scene.add(sphere);
+
+        // Mouse interaction
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
+        });
+
+        const clock = new THREE.Clock();
+
+        // Animation loop
+        const animate = () => {
+            requestAnimationFrame(animate);
+            
+            const elapsedTime = clock.getElapsedTime();
+
+            targetX = mouseX * 0.001;
+            targetY = mouseY * 0.001;
+            
+            // Gentle continuous rotation
+            particlesMesh.rotation.y += 0.0005;
+            particlesMesh.rotation.x += 0.0002;
+            
+            sphere.rotation.y -= 0.001;
+            sphere.rotation.x += 0.0005;
+
+            // Parallax effect following mouse
+            particlesMesh.rotation.y += 0.05 * (targetX - particlesMesh.rotation.y);
+            particlesMesh.rotation.x += 0.05 * (targetY - particlesMesh.rotation.x);
+            
+            // Float effect for particles
+            particlesMesh.position.y = Math.sin(elapsedTime * 0.5) * 0.2;
+
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
