@@ -3,6 +3,7 @@ from src.wine_quality_project.pipeline.data_ingestion_pipeline import DataIngest
 from src.wine_quality_project.pipeline.data_validation_pipeline import DataValidationTrainingPipeline
 from src.wine_quality_project.pipeline.data_transformation_pipeline import DataTransformationTrainingPipeline
 from src.wine_quality_project.pipeline.model_trainer_pipeline import ModelTrainingPipeline
+from src.wine_quality_project.pipeline.mode_evalauation_pipeline import ModelEvaluationTrainingPipeline
 
 
 logger.info("Welcome to our custome logging project")
@@ -41,6 +42,16 @@ try:
     logger.info(f">>>>>> stage {STAGE_NAME} started <<<<<<<")
     data_transformation = ModelTrainingPipeline()
     data_transformation.initiate_model_training()
+    logger.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<<\n\nx===============x")
+except Exception as e:
+    raise e
+
+STAGE_NAME = "Model Evaluation Stage"
+
+try:
+    logger.info(f">>>>>> stage {STAGE_NAME} started <<<<<<<")
+    model_evaluation = ModelEvaluationTrainingPipeline()
+    model_evaluation.initiate_model_evaluation()
     logger.info(f">>>>>> stage {STAGE_NAME} completed <<<<<<<\n\nx===============x")
 except Exception as e:
     raise e
