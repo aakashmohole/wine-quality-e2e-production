@@ -9,6 +9,15 @@ import mlflow.sklearn
 import numpy as np
 import joblib
 from pathlib import Path
+
+
+import os
+
+os.environ["MLFLOW_TRACKING_URI"] = "https://dagshub.com/aakashmohole/wine-quality-e2e-production.mlflow"
+os.environ["MLFLOW_TRACKING_USERNAME"] = "aakashmohole"
+os.environ["MLFLOW_TRACKING_PASSWORD"] = "966e68bc3e9374ca23d7ff1e223912705356fec3"
+
+
 class ModelEvaluation:
     def __init__(self, config: ModelEvaluationConfig):
         self.config = config
