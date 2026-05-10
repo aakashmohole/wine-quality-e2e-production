@@ -129,6 +129,24 @@ The application is fully containerized. You can run the web application without 
 
 ---
 
+## ☁️ Cloud Architecture & CI/CD Pipeline
+
+This repository implements a highly available, scalable, and automated deployment architecture leveraging **Amazon Web Services (AWS)** and **GitHub Actions**. The deployment strategy adheres to modern DevOps principles, focusing on immutable infrastructure and continuous delivery.
+
+### 🔄 CI/CD Workflow (GitHub Actions)
+The continuous integration and continuous deployment pipeline is orchestrated via a sophisticated GitHub Actions workflow (`.github/workflows/ci-cd.yml`). It enforces a zero-downtime deployment lifecycle:
+- **Continuous Integration (CI):** On every push to the `main` branch, the pipeline provisions an Ubuntu runner, instantiates the Python 3.9 environment, and enforces strict code linting using `flake8` to prevent syntactical and logical regressions.
+- **Continuous Delivery (CD):** Upon successful integration, the pipeline securely authenticates with AWS via ephemeral OpenID Connect (OIDC) or strict IAM programmatic access. It builds an optimized Docker container, tags it deterministically with the Git commit SHA, and pushes the immutable image to **Amazon Elastic Container Registry (ECR)**.
+- **Continuous Deployment (CD):** The pipeline dynamically injects the new ECR image URI into our AWS Task Definition schema (`.aws/task-definition.json`). It then delegates the deployment to the AWS ECS API, triggering a rolling update.
+
+### 🌐 Serverless Container Orchestration (AWS ECS & Fargate)
+The application is hosted on **Amazon Elastic Container Service (ECS)** utilizing the **AWS Fargate** serverless compute engine, abstracting away underlying EC2 instance provisioning and cluster management.
+- **Task Definitions:** Encapsulate the application's runtime blueprint (CPU, Memory, networking modes, and IAM execution roles).
+- **Zero-Downtime Rolling Updates:** ECS ensures high availability by provisioning the new container revision, waiting for container health-checks to pass, seamlessly draining traffic from the obsolete container, and subsequently terminating it. 
+- **Centralized Telemetry:** All stdout/stderr telemetry streams are natively ingested by **Amazon CloudWatch** via the `awslogs` log driver for centralized observability and alerting.
+
+---
+
 ## 📊 MLflow Integration
 
 This project uses **MLflow** for experiment tracking. Metrics (RMSE, MAE, R2 Score) and model parameters are logged automatically to a remote DagsHub MLflow server.
